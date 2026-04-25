@@ -27,9 +27,15 @@ app = FastAPI(title="ploydok fixture-fastapi")
 BUILD_ID = os.environ.get("PLOYDOK_BUILD_ID", "unknown")
 
 
+def _list_items():
+    with Session(engine) as s:
+        rows = s.scalars(select(Item).order_by(Item.id)).all()
+        return [{"id": r.id, "name": r.name} for r in rows]
+
+
 @app.get("/")
 def root():
-    return {"message": "hello from ploydok (fastapi)", "build": BUILD_ID}
+    return {"build": BUILD_ID, "items": _list_items()}
 
 
 @app.get("/health")
@@ -39,6 +45,4 @@ def health():
 
 @app.get("/items")
 def items():
-    with Session(engine) as s:
-        rows = s.scalars(select(Item).order_by(Item.id)).all()
-        return [{"id": r.id, "name": r.name} for r in rows]
+    return _list_items()
